@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #101a33;
+  --color-navy-2: #16224a;
+  --color-navy-3: #1d2c5c;
+  --color-paper: #f7f8fb;
+  --color-paper-dim: #eef0f6;
+  --color-gold: #d5a237;
+  --color-gold-dim: #b3852a;
+  --color-line: #e2e5ee;
+  --color-ink: #101a33;
+  --color-slate: #5c6478;
+
+  --font-heading: "Sora", "Inter", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-dim);
+  outline-offset: 2px;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.bp-grid {
+  background-image: radial-gradient(circle, rgba(247, 248, 251, 0.14) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Simple scrollbar styling for the portal's data tables */
+.thin-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-line);
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

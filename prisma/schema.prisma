@@ -1,0 +1,160 @@
+// JSS Innovative Solutions — Employee Portal data model
+// Run `npx prisma migrate dev` after setting DATABASE_URL to a Postgres instance.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  EMPLOYEE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  department   String?
+  active       Boolean  @default(true)
+  mustResetPw  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  attendance     Attendance[]
+  tasks          Task[]         @relation("AssignedTasks")
+  createdTasks   Task[]         @relation("CreatedTasks")
+  leaveRequests  LeaveRequest[] @relation("LeaveRequester")
+  reviewedLeaves LeaveRequest[] @relation("LeaveReviewer")
+
+  @@index([role])
+}
+
+model OfficeSettings {
+  id            Int      @id @default(1)
+  name          String   @default("JSS Innovative Solutions — Pune HQ")
+  lat           Float
+  lng           Float
+  radiusMeters  Int      @default(200)
+  updatedAt     DateTime @updatedAt
+}
+
+model Attendance {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date
+  inTime    DateTime?
+  outTime   DateTime?
+  inLat     Float?
+  inLng     Float?
+  outLat    Float?
+  outLng    Float?
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, date])
+  @@index([date])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(PENDING)
+  dueDate     DateTime?
+  assignedToId String
+  assignedTo   User        @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    User        @relation("CreatedTasks", fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([assignedToId])
+  @@index([status])
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
+  fromDate     DateTime    @db.Date
+  toDate       DateTime    @db.Date
+  reason       String
+  status       LeaveStatus @default(PENDING)
+  reviewedById String?
+  reviewedBy   User?       @relation("LeaveReviewer", fields: [reviewedById], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  interest  String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model JobApplication {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  position   String
+  coverNote  String?
+  resumeUrl  String?
+  createdAt  DateTime @default(now())
+}
+
+// One row per editable marketing-site section (hero stats, services, values,
+// etc.). Storing structured JSON here — rather than a table per section —
+// keeps the schema small while still letting the Owner edit every section
+// from the portal. Each section's shape is defined and validated in
+// lib/site-content-db.ts, not enforced by the database.
+model SiteContent {
+  id        String   @id @default(cuid())
+  section   String   @unique
+  data      Json
+  updatedAt DateTime @updatedAt
+}
